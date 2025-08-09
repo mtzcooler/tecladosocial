@@ -1,0 +1,10 @@
+repos:
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.11.7
+  hooks:
+    - id: ruff-format # Run the formatter.
+    - id: ruff
+      args: [
+        "--fix",  # Automatically fix issues
+      ]
+      language_version: python3
