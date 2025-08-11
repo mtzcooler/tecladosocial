@@ -31,3 +31,60 @@ async def test_list_all_posts(async_client: AsyncClient, created_post: dict):
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == [created_post]
+
+
+@pytest.mark.anyio
+async def test_create_comment(async_client: AsyncClient, created_post: dict):
+    body = "Test comment"
+    post_id = created_post["id"]
+    response = await async_client.post(
+        f"/posts/{post_id}/comments", json={"body": body}
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert {
+        "id": 0,
+        "post_id": post_id,
+        "body": body,
+    }.items() <= response.json().items()
+
+
+@pytest.mark.anyio
+async def test_get_comments_on_post(
+    async_client: AsyncClient, created_post: dict, created_comment: dict
+):
+    response = await async_client.get(f"/posts/{created_post['id']}/comments")
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == [created_comment]
+
+
+@pytest.mark.anyio
+async def test_get_comments_on_post_without_comments(
+    async_client: AsyncClient, created_post: dict
+):
+    response = await async_client.get(f"/posts/{created_post['id']}/comments")
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == []
+
+
+@pytest.mark.anyio
+async def test_post_with_comments(
+    async_client: AsyncClient, created_post: dict, created_comment: dict
+):
+    response = await async_client.get(f"/posts/{created_post['id']}")
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {
+        "post": created_post,
+        "comments": [created_comment],
+    }
+
+
+@pytest.mark.anyio
+async def test_get_missing_post_with_comments(
+    async_client: AsyncClient, created_post: dict, created_comment: dict
+):
+    response = await async_client.get("/posts/2")
+    assert response.status_code == HTTPStatus.NOT_FOUND
