@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class PostCreate(BaseModel):
@@ -6,6 +6,7 @@ class PostCreate(BaseModel):
 
 
 class PostRead(PostCreate):
+    model_config = ConfigDict(from_attributes=True)
     id: int
 
 
@@ -14,6 +15,7 @@ class CommentCreate(BaseModel):
 
 
 class CommentRead(CommentCreate):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     post_id: int
 

@@ -9,9 +9,7 @@ from app.schemas.post import (
     CommentRead,
     PostWithComments,
 )
-
-post_table = {}
-comment_table = {}
+from app.database import database, post_table, comment_table
 
 router = APIRouter(
     prefix="/posts",
@@ -20,21 +18,23 @@ router = APIRouter(
 
 
 async def find_post(post_id: int) -> dict:
-    return post_table.get(post_id, {})
+    query = post_table.select().where(post_table.c.id == post_id)
+    return await database.fetch_one(query)
 
 
 @router.post("", name="Create post", status_code=HTTPStatus.CREATED)
 async def create_post(post: PostCreate) -> PostRead:
     data = post.model_dump()
-    last_record_id = len(post_table)
+    query = post_table.insert().values(data)
+    last_record_id = await database.execute(query)
     new_post = {**data, "id": last_record_id}
-    post_table[last_record_id] = new_post
     return PostRead(**new_post)
 
 
 @router.get("", name="List posts", status_code=HTTPStatus.OK)
 async def list_posts() -> List[PostRead]:
-    return list(post_table.values())
+    query = post_table.select()
+    return await database.fetch_all(query)
 
 
 @router.post(
@@ -46,17 +46,17 @@ async def create_comment(post_id: int, comment: CommentCreate) -> CommentRead:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Post not found")
 
     data = comment.model_dump()
-    last_record_id = len(comment_table)
-    new_comment = {**data, "post_id": post_id, "id": last_record_id}
-    comment_table[last_record_id] = new_comment
+    data = {**data, "post_id": post_id}
+    query = comment_table.insert().values(data)
+    last_record_id = await database.execute(query)
+    new_comment = {**data, "id": last_record_id}
     return CommentRead(**new_comment)
 
 
 @router.get("/{post_id}/comments", name="List comments", status_code=HTTPStatus.OK)
 async def list_comments(post_id: int) -> List[CommentRead]:
-    return [
-        comment for comment in comment_table.values() if comment["post_id"] == post_id
-    ]
+    query = comment_table.select().where(comment_table.c.post_id == post_id)
+    return await database.fetch_all(query)
 
 
 @router.get("/{post_id}", name="Get post with comments", status_code=HTTPStatus.OK)
