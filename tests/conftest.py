@@ -1,13 +1,13 @@
-from typing import AsyncGenerator, Generator
 import os
+
+os.environ["ENV_STATE"] = "test"
+from typing import AsyncGenerator, Generator
 import pytest
 from fastapi.testclient import TestClient
 from httpx import AsyncClient, ASGITransport
 
 from app.main import app
 from app.database import database
-
-os.environ["ENV_STATE"] = "test"
 
 
 @pytest.fixture(scope="session")
