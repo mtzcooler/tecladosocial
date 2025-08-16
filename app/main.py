@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.exception_handlers import http_exception_handler
 import logging
+from asgi_correlation_id import CorrelationIdMiddleware
 from app.logging_config import configure_logging
 from app.database import database
 from app.routers.post import router as post_router
@@ -18,6 +19,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(CorrelationIdMiddleware)
 
 app.include_router(post_router)
 
