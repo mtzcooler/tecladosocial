@@ -3,8 +3,7 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 import logging
 
-from app.database import database
-from app.models import post_table, comment_table
+from app.database import database, post_table, comment_table
 from app.schemas.post import (
     PostCreate,
     PostRead,

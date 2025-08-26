@@ -8,4 +8,4 @@ rich
 asgi-correlation-id
 python-jose
 python-multipart
-passlib[bcrypt]
+bcrypt

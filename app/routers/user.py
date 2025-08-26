@@ -2,9 +2,8 @@ from http import HTTPStatus
 import logging
 from fastapi import APIRouter, HTTPException
 
-from app.security import get_user
-from app.database import database
-from app.models import user_table
+from app.security import get_user, get_password_hash
+from app.database import database, user_table
 from app.schemas.user import UserCreate, User
 
 logger = logging.getLogger(__name__)
@@ -21,7 +20,8 @@ async def register(user: UserCreate) -> User:
             status_code=HTTPStatus.CONFLICT,
             detail="A user with that email already exists.",
         )
-    query = user_table.insert().values(email=user.email, password=user.password)
+    hashed_password = get_password_hash(user.password)
+    query = user_table.insert().values(email=user.email, password=hashed_password)
 
     logger.debug(query)
 

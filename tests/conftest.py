@@ -1,6 +1,7 @@
 import os
 
 os.environ["ENV_STATE"] = "test"
+
 from typing import AsyncGenerator, Generator
 import pytest
 from fastapi.testclient import TestClient
