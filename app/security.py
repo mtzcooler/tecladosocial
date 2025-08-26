@@ -1,6 +1,7 @@
 import logging
 
-from app.database import database, user_table
+from app.database import database
+from app.models import user_table
 
 
 logger = logging.getLogger(__name__)

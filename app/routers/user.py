@@ -1,9 +1,11 @@
 from http import HTTPStatus
 import logging
 from fastapi import APIRouter, HTTPException
-from app.schemas.user import UserCreate, User
+
 from app.security import get_user
-from app.database import database, user_table
+from app.database import database
+from app.models import user_table
+from app.schemas.user import UserCreate, User
 
 logger = logging.getLogger(__name__)
 router = APIRouter(
