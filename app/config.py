@@ -14,6 +14,7 @@ class BaseConfig(BaseSettings):
 class GlobalConfig(BaseConfig):
     DATABASE_URL: Optional[str] = None
     DB_FORCE_ROLLBACK: bool = False
+    APP_SECRET: Optional[str] = None
 
 
 class DevConfig(GlobalConfig):
@@ -27,6 +28,7 @@ class ProdConfig(GlobalConfig):
 class TestConfig(GlobalConfig):
     DATABASE_URL: str = "sqlite:///test.db"
     DB_FORCE_ROLLBACK: bool = True
+    APP_SECRET: str = "1234"
 
     model_config = SettingsConfigDict(env_prefix="TEST_")
 

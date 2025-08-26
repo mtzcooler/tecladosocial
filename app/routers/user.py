@@ -2,13 +2,18 @@ from http import HTTPStatus
 import logging
 from fastapi import APIRouter, HTTPException
 
-from app.security import get_user, get_password_hash
+from app.security import (
+    get_user,
+    get_password_hash,
+    authenticate_user,
+    create_access_token,
+)
 from app.database import database, user_table
 from app.schemas.user import UserCreate, User
 
+
 logger = logging.getLogger(__name__)
 router = APIRouter(
-    prefix="/users",
     tags=["Users"],
 )
 
@@ -28,3 +33,10 @@ async def register(user: UserCreate) -> User:
     last_record_id = await database.execute(query)
     new_user = {"email": user.email, "id": last_record_id}
     return User(**new_user)
+
+
+@router.post("/login")
+async def login(user: UserCreate):
+    user = await authenticate_user(user.email, user.password)
+    access_token = create_access_token(user.email)
+    return {"access_token": access_token, "token_type": "bearer"}
