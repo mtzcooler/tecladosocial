@@ -6,6 +6,7 @@ from asgi_correlation_id import CorrelationIdMiddleware
 from app.logging_config import configure_logging
 from app.database import database
 from app.routers.post import router as post_router
+from app.routers.user import router as user_router
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(CorrelationIdMiddleware)
 
 app.include_router(post_router)
+app.include_router(user_router)
 
 
 @app.exception_handler(HTTPException)
