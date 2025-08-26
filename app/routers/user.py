@@ -36,7 +36,7 @@ async def register(user: UserCreate) -> User:
 
 
 @router.post("/login")
-async def login(user: UserCreate):
+async def login(user: UserCreate) -> dict:
     user = await authenticate_user(user.email, user.password)
     access_token = create_access_token(user.email)
     return {"access_token": access_token, "token_type": "bearer"}

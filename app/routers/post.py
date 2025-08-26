@@ -1,6 +1,6 @@
 from http import HTTPStatus
-from fastapi import APIRouter, HTTPException
-from typing import List
+from fastapi import APIRouter, HTTPException, Depends
+from typing import List, Annotated
 import logging
 
 from app.database import database, post_table, comment_table
@@ -11,6 +11,8 @@ from app.schemas.post import (
     CommentRead,
     PostWithComments,
 )
+from app.schemas.user import User
+from app.security import get_authenticated_user
 
 router = APIRouter(
     prefix="/posts",
@@ -28,7 +30,9 @@ async def find_post(post_id: int) -> dict:
 
 
 @router.post("", name="Create post", status_code=HTTPStatus.CREATED)
-async def create_post(post: PostCreate) -> PostRead:
+async def create_post(
+    post: PostCreate, current_user: Annotated[User, Depends(get_authenticated_user)]
+) -> PostRead:
     logger.info("Creating post")
     data = post.model_dump()
     query = post_table.insert().values(data)
@@ -49,7 +53,11 @@ async def list_posts() -> List[PostRead]:
 @router.post(
     "/{post_id}/comments", name="Create comment", status_code=HTTPStatus.CREATED
 )
-async def create_comment(post_id: int, comment: CommentCreate) -> CommentRead:
+async def create_comment(
+    post_id: int,
+    comment: CommentCreate,
+    current_user: Annotated[User, Depends(get_authenticated_user)],
+) -> CommentRead:
     logger.info("Creating comment")
     post = await find_post(post_id)
     if not post:

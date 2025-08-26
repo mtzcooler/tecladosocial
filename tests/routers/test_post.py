@@ -4,11 +4,12 @@ from http import HTTPStatus
 
 
 @pytest.mark.anyio
-async def test_create_post(async_client: AsyncClient):
+async def test_create_post(async_client: AsyncClient, logged_in_token: str):
     body = "Test Post"
     response = await async_client.post(
         "/posts",
         json={"body": body},
+        headers={"Authorization": f"Bearer {logged_in_token}"},
     )
 
     assert response.status_code == HTTPStatus.CREATED
@@ -16,10 +17,13 @@ async def test_create_post(async_client: AsyncClient):
 
 
 @pytest.mark.anyio
-async def test_create_post_missing_data(async_client: AsyncClient):
+async def test_create_post_missing_data(
+    async_client: AsyncClient, logged_in_token: str
+):
     response = await async_client.post(
         "/posts",
         json={},
+        headers={"Authorization": f"Bearer {logged_in_token}"},
     )
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
@@ -34,11 +38,15 @@ async def test_list_all_posts(async_client: AsyncClient, created_post: dict):
 
 
 @pytest.mark.anyio
-async def test_create_comment(async_client: AsyncClient, created_post: dict):
+async def test_create_comment(
+    async_client: AsyncClient, created_post: dict, logged_in_token: str
+):
     body = "Test comment"
     post_id = created_post["id"]
     response = await async_client.post(
-        f"/posts/{post_id}/comments", json={"body": body}
+        f"/posts/{post_id}/comments",
+        json={"body": body},
+        headers={"Authorization": f"Bearer {logged_in_token}"},
     )
 
     assert response.status_code == HTTPStatus.CREATED
