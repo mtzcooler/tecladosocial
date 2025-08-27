@@ -3,13 +3,14 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Annotated
 import logging
 
-from app.database import database, post_table, comment_table
+from app.database import database, post_table, comment_table, like_table
 from app.schemas.post import (
     PostCreate,
     PostRead,
     CommentCreate,
     CommentRead,
     PostWithComments,
+    LikeRead,
 )
 from app.schemas.user import UserRead
 from app.security import get_authenticated_user
@@ -92,3 +93,23 @@ async def read_post_with_comments(post_id: int) -> PostWithComments:
         "comments": await list_comments(post_id),
     }
     return PostWithComments(**posts_with_comments)
+
+
+@router.post("/{post_id}/like", name="Like post", status_code=HTTPStatus.CREATED)
+async def like_post(
+    post_id: int, current_user: Annotated[UserRead, Depends(get_authenticated_user)]
+) -> LikeRead:
+    logger.info("Liking post")
+
+    post = await find_post(post_id)
+    if not post:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Post not found")
+
+    data = {"post_id": post_id, "user_id": current_user.id}
+    query = like_table.insert().values(data)
+
+    logger.debug(query)
+
+    last_record_id = await database.execute(query)
+    data = {**data, "id": last_record_id}
+    return LikeRead(**data)

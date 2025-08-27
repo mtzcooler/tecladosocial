@@ -106,3 +106,15 @@ async def test_get_missing_post_with_comments(
 ):
     response = await async_client.get("/posts/2")
     assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.anyio
+async def test_like_post(
+    async_client: AsyncClient, created_post: dict, logged_in_token: str
+):
+    response = await async_client.post(
+        f"/posts/{created_post['id']}/like",
+        json={},
+        headers={"Authorization": f"Bearer {logged_in_token}"},
+    )
+    assert response.status_code == HTTPStatus.CREATED

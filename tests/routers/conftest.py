@@ -31,6 +31,17 @@ async def create_user(email: str, password: str, async_client: AsyncClient) -> d
     return response.json()
 
 
+async def like_post(
+    post_id: int, async_client: AsyncClient, logged_in_token: str
+) -> dict:
+    response = await async_client.post(
+        f"/posts/{post_id}/like",
+        json={},
+        headers={"Authorization": f"Bearer {logged_in_token}"},
+    )
+    return response.json()
+
+
 @pytest.fixture()
 async def created_post(async_client: AsyncClient, logged_in_token: str) -> dict:
     return await create_post("Test post", async_client, logged_in_token)

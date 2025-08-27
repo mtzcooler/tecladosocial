@@ -25,3 +25,13 @@ class CommentRead(CommentCreate):
 class PostWithComments(BaseModel):
     post: PostRead
     comments: list[CommentRead]
+
+
+class LikeCreate(BaseModel):
+    post_id: int
+
+
+class LikeRead(LikeCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    user_id: int
