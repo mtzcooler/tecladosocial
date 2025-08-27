@@ -62,5 +62,12 @@ async def registered_user_with_password(async_client: AsyncClient) -> dict:
 async def logged_in_token(
     async_client: AsyncClient, registered_user_with_password: dict
 ) -> str:
-    response = await async_client.post("/login", json=registered_user_with_password)
+    response = await async_client.post(
+        "/login",
+        data={
+            "username": registered_user_with_password["email"],
+            "password": registered_user_with_password["password"],
+        },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
     return response.json()["access_token"]

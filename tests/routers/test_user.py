@@ -33,7 +33,9 @@ async def test_register_user_already_exists(
 @pytest.mark.anyio
 async def test_login_user_not_exists(async_client: AsyncClient):
     response = await async_client.post(
-        "/login", json={"email": "test@example.net", "password": "1234"}
+        "/login",
+        data={"username": "test@example.net", "password": "1234"},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.json() == {"detail": "Inexistent user"}
@@ -45,10 +47,11 @@ async def test_login_user(
 ):
     response = await async_client.post(
         "/login",
-        json={
-            "email": registered_user_with_password["email"],
+        data={
+            "username": registered_user_with_password["email"],
             "password": registered_user_with_password["password"],
         },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
     assert response.status_code == HTTPStatus.OK
 
@@ -59,10 +62,11 @@ async def test_login_user_wrong_password(
 ):
     response = await async_client.post(
         "/login",
-        json={
-            "email": registered_user["email"],
+        data={
+            "username": registered_user["email"],
             "password": "wrong password",
         },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.json() == {"detail": "Invalid credentials"}
