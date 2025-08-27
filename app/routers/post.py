@@ -2,6 +2,7 @@ from http import HTTPStatus
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Annotated
 import logging
+import sqlalchemy
 
 from app.database import database, post_table, comment_table, like_table
 from app.schemas.post import (
@@ -9,8 +10,8 @@ from app.schemas.post import (
     PostRead,
     CommentCreate,
     CommentRead,
-    PostWithComments,
     LikeRead,
+    PostWithCommentsAndLikes,
 )
 from app.schemas.user import UserRead
 from app.security import get_authenticated_user
@@ -21,6 +22,12 @@ router = APIRouter(
 )
 
 logger = logging.getLogger(__name__)
+
+select_post_and_likes = (
+    sqlalchemy.select(post_table, sqlalchemy.func.count(like_table.c.id).label("likes"))
+    .select_from(post_table.outerjoin(like_table))
+    .group_by(post_table.c.id)
+)
 
 
 async def find_post(post_id: int) -> dict:
@@ -82,17 +89,20 @@ async def list_comments(post_id: int) -> List[CommentRead]:
 
 
 @router.get("/{post_id}", name="Get post with comments", status_code=HTTPStatus.OK)
-async def read_post_with_comments(post_id: int) -> PostWithComments:
+async def read_post_with_comments(post_id: int) -> PostWithCommentsAndLikes:
     logger.info("Getting post and its comments")
-    post = await find_post(post_id)
-    if not post:
+
+    query = select_post_and_likes.where(post_table.c.id == post_id)
+    logger.debug(query)
+    post_with_likes = await database.fetch_one(query)
+    if not post_with_likes:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Post not found")
 
-    posts_with_comments = {
-        "post": post,
+    posts_with_comments_and_likes = {
+        "post": post_with_likes,
         "comments": await list_comments(post_id),
     }
-    return PostWithComments(**posts_with_comments)
+    return PostWithCommentsAndLikes(**posts_with_comments_and_likes)
 
 
 @router.post("/{post_id}/like", name="Like post", status_code=HTTPStatus.CREATED)

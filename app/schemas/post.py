@@ -22,8 +22,17 @@ class CommentRead(CommentCreate):
     user_id: int
 
 
+class PostWithLikes(PostRead):
+    likes: int
+
+
 class PostWithComments(BaseModel):
-    post: PostRead
+    post: PostWithLikes
+    comments: list[CommentRead]
+
+
+class PostWithCommentsAndLikes(BaseModel):
+    post: PostWithLikes
     comments: list[CommentRead]
 
 

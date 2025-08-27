@@ -95,7 +95,7 @@ async def test_post_with_comments(
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
-        "post": created_post,
+        "post": {**created_post, "likes": 0},
         "comments": [created_comment],
     }
 
