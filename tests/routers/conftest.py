@@ -48,6 +48,15 @@ async def created_post(async_client: AsyncClient, logged_in_token: str) -> dict:
 
 
 @pytest.fixture()
+async def created_post_with_like(
+    async_client: AsyncClient, logged_in_token: str
+) -> dict:
+    post = await create_post("Test post with like", async_client, logged_in_token)
+    await like_post(post["id"], async_client, logged_in_token)
+    return post
+
+
+@pytest.fixture()
 async def created_comment(
     async_client: AsyncClient, created_post: dict, logged_in_token: str
 ) -> dict:

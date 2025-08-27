@@ -1,6 +1,7 @@
 from http import HTTPStatus
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Annotated
+from enum import Enum
 import logging
 import sqlalchemy
 
@@ -11,6 +12,7 @@ from app.schemas.post import (
     CommentCreate,
     CommentRead,
     LikeRead,
+    PostWithLikes,
     PostWithCommentsAndLikes,
 )
 from app.schemas.user import UserRead
@@ -28,6 +30,12 @@ select_post_and_likes = (
     .select_from(post_table.outerjoin(like_table))
     .group_by(post_table.c.id)
 )
+
+
+class PostSorting(Enum):
+    newest = "-id"
+    oldest = "+id"
+    most_likes = "-likes"
 
 
 async def find_post(post_id: int) -> dict:
@@ -51,9 +59,14 @@ async def create_post(
 
 
 @router.get("", name="List posts", status_code=HTTPStatus.OK)
-async def list_posts() -> List[PostRead]:
+async def list_posts(sorting: PostSorting = PostSorting.newest) -> List[PostWithLikes]:
     logger.info("Getting all posts")
-    query = post_table.select()
+    if sorting == PostSorting.newest:
+        query = select_post_and_likes.order_by(post_table.c.id.desc())
+    elif sorting == PostSorting.oldest:
+        query = select_post_and_likes.order_by(post_table.c.id)
+    elif sorting == PostSorting.most_likes:
+        query = select_post_and_likes.order_by(sqlalchemy.desc("likes"))
     logger.debug(query)
     return await database.fetch_all(query)
 
