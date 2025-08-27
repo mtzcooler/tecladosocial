@@ -9,7 +9,7 @@ from app.security import (
     create_access_token,
 )
 from app.database import database, user_table
-from app.schemas.user import UserCreate, User
+from app.schemas.user import UserCreate, UserRead
 
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ router = APIRouter(
 
 
 @router.post("/register", status_code=HTTPStatus.CREATED)
-async def register(user: UserCreate) -> User:
+async def register(user: UserCreate) -> UserRead:
     if await get_user(user.email):
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT,
@@ -32,7 +32,7 @@ async def register(user: UserCreate) -> User:
 
     last_record_id = await database.execute(query)
     new_user = {"email": user.email, "id": last_record_id}
-    return User(**new_user)
+    return UserRead(**new_user)
 
 
 @router.post("/login")

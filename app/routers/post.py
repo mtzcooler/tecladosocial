@@ -11,7 +11,7 @@ from app.schemas.post import (
     CommentRead,
     PostWithComments,
 )
-from app.schemas.user import User
+from app.schemas.user import UserRead
 from app.security import get_authenticated_user
 
 router = APIRouter(
@@ -31,10 +31,10 @@ async def find_post(post_id: int) -> dict:
 
 @router.post("", name="Create post", status_code=HTTPStatus.CREATED)
 async def create_post(
-    post: PostCreate, current_user: Annotated[User, Depends(get_authenticated_user)]
+    post: PostCreate, current_user: Annotated[UserRead, Depends(get_authenticated_user)]
 ) -> PostRead:
     logger.info("Creating post")
-    data = post.model_dump()
+    data = {**post.model_dump(), "user_id": current_user.id}
     query = post_table.insert().values(data)
     logger.debug(query)
     last_record_id = await database.execute(query)
@@ -56,7 +56,7 @@ async def list_posts() -> List[PostRead]:
 async def create_comment(
     post_id: int,
     comment: CommentCreate,
-    current_user: Annotated[User, Depends(get_authenticated_user)],
+    current_user: Annotated[UserRead, Depends(get_authenticated_user)],
 ) -> CommentRead:
     logger.info("Creating comment")
     post = await find_post(post_id)
@@ -64,7 +64,7 @@ async def create_comment(
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Post not found")
 
     data = comment.model_dump()
-    data = {**data, "post_id": post_id}
+    data = {**data, "post_id": post_id, "user_id": current_user.id}
     query = comment_table.insert().values(data)
     logger.debug(query)
     last_record_id = await database.execute(query)

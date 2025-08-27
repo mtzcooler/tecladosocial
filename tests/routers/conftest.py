@@ -53,8 +53,9 @@ async def registered_user(async_client: AsyncClient) -> dict:
 
 @pytest.fixture()
 async def registered_user_with_password(async_client: AsyncClient) -> dict:
-    user_details = await create_user("test@example.com", "1234", async_client)
-    return {**user_details, "password": "1234"}
+    password = "1234"
+    user_details = await create_user("test@example.com", password, async_client)
+    return {**user_details, "password": password}
 
 
 @pytest.fixture()

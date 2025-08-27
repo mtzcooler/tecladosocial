@@ -8,6 +8,7 @@ class PostCreate(BaseModel):
 class PostRead(PostCreate):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    user_id: int
 
 
 class CommentCreate(BaseModel):
@@ -18,6 +19,7 @@ class CommentRead(CommentCreate):
     model_config = ConfigDict(from_attributes=True)
     id: int
     post_id: int
+    user_id: int
 
 
 class PostWithComments(BaseModel):

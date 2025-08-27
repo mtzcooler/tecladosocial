@@ -4,7 +4,9 @@ from http import HTTPStatus
 
 
 @pytest.mark.anyio
-async def test_create_post(async_client: AsyncClient, logged_in_token: str):
+async def test_create_post(
+    async_client: AsyncClient, logged_in_token: str, registered_user_with_password
+):
     body = "Test Post"
     response = await async_client.post(
         "/posts",
@@ -13,7 +15,11 @@ async def test_create_post(async_client: AsyncClient, logged_in_token: str):
     )
 
     assert response.status_code == HTTPStatus.CREATED
-    assert {"id": 1, "body": body}.items() <= response.json().items()
+    assert {
+        "id": 1,
+        "body": body,
+        "user_id": registered_user_with_password["id"],
+    }.items() <= response.json().items()
 
 
 @pytest.mark.anyio
@@ -39,7 +45,10 @@ async def test_list_all_posts(async_client: AsyncClient, created_post: dict):
 
 @pytest.mark.anyio
 async def test_create_comment(
-    async_client: AsyncClient, created_post: dict, logged_in_token: str
+    async_client: AsyncClient,
+    created_post: dict,
+    logged_in_token: str,
+    registered_user_with_password,
 ):
     body = "Test comment"
     post_id = created_post["id"]
@@ -53,6 +62,7 @@ async def test_create_comment(
     assert {
         "id": 1,
         "post_id": post_id,
+        "user_id": registered_user_with_password["id"],
         "body": body,
     }.items() <= response.json().items()
 
