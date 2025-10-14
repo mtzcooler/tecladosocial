@@ -6,5 +6,6 @@ class UserRead(BaseModel):
     email: str
 
 
-class UserCreate(UserRead):
+class UserCreate(BaseModel):
+    email: str
     password: str

@@ -18,6 +18,14 @@ ALGORITHM = "HS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 
+def unauthorized_exception(message: str) -> HTTPException:
+    return HTTPException(
+        status_code=HTTPStatus.UNAUTHORIZED,
+        detail=message,
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
 def get_password_hash(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
@@ -67,13 +75,9 @@ async def authenticate_user(email: str, password: str):
     logger.debug("Authenticating user", extra={"email": email})
     user = await get_user(email)
     if not user:
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED, detail="Inexistent user"
-        )
+        raise unauthorized_exception("Inexistent user")
     if not verify_password(password, user.password):
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid credentials"
-        )
+        raise unauthorized_exception("Invalid credentials")
     return user
 
 
@@ -82,28 +86,15 @@ async def get_authenticated_user(token: Annotated[str, Depends(oauth2_scheme)]):
         payload = jwt.decode(token, key=SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
         if email is None:
-            raise HTTPException(
-                status_code=HTTPStatus.UNAUTHORIZED,
-                detail="Invalid credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise unauthorized_exception("Invalid credentials")
+        type = payload.get("type")
+        if type != "access":
+            raise unauthorized_exception("Invalid token type")
     except ExpiredSignatureError as e:
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail="Token has expired",
-            headers={"WWW-Authenticate": "Bearer"},
-        ) from e
+        raise unauthorized_exception("Token has expired") from e
     except JWTError as e:
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail="Invalid credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        ) from e
+        raise unauthorized_exception("Invalid credentials") from e
     user = await get_user(email=email)
     if user is None:
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail="Could not find user for this token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise unauthorized_exception("Could not find user for this token")
     return user
