@@ -1,6 +1,6 @@
 import logging
 from http import HTTPStatus
-from typing import Annotated
+from typing import Annotated, Literal
 from fastapi import HTTPException, Depends
 import bcrypt
 import datetime
@@ -62,6 +62,27 @@ def create_confirmation_token(email: str):
     return encoded_jwt
 
 
+def get_subject_for_token_type(
+    token: str, type: Literal["access", "confirmation"]
+) -> str:
+    try:
+        payload = jwt.decode(token, key=SECRET_KEY, algorithms=[ALGORITHM])
+    except ExpiredSignatureError as e:
+        raise unauthorized_exception("Token has expired") from e
+    except JWTError as e:
+        raise unauthorized_exception("Invalid token") from e
+
+    email = payload.get("sub")
+    if email is None:
+        raise unauthorized_exception("Token is missing 'sub' field")
+
+    token_type = payload.get("type")
+    if token_type != type:
+        raise unauthorized_exception(f"Token has incorrect type, expected '{type}'")
+
+    return email
+
+
 async def get_user(email: str):
     logger.debug("Fetching user from the database", extra={"email": email})
     query = user_table.select().where(user_table.c.email == email)
@@ -82,18 +103,7 @@ async def authenticate_user(email: str, password: str):
 
 
 async def get_authenticated_user(token: Annotated[str, Depends(oauth2_scheme)]):
-    try:
-        payload = jwt.decode(token, key=SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
-        if email is None:
-            raise unauthorized_exception("Invalid credentials")
-        type = payload.get("type")
-        if type != "access":
-            raise unauthorized_exception("Invalid token type")
-    except ExpiredSignatureError as e:
-        raise unauthorized_exception("Token has expired") from e
-    except JWTError as e:
-        raise unauthorized_exception("Invalid credentials") from e
+    email = get_subject_for_token_type(token, type="access")
     user = await get_user(email=email)
     if user is None:
         raise unauthorized_exception("Could not find user for this token")
