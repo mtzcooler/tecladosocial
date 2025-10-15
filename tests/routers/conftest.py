@@ -66,27 +66,14 @@ async def created_comment(
 
 
 @pytest.fixture()
-async def registered_user(async_client: AsyncClient) -> dict:
-    user_details = await create_user("test@example.com", "1234", async_client)
-    return user_details
-
-
-@pytest.fixture()
-async def registered_user_with_password(async_client: AsyncClient) -> dict:
-    password = "1234"
-    user_details = await create_user("test@example.com", password, async_client)
-    return {**user_details, "password": password}
-
-
-@pytest.fixture()
 async def logged_in_token(
-    async_client: AsyncClient, registered_user_with_password: dict
+    async_client: AsyncClient, confirmed_user_with_password: dict
 ) -> str:
     response = await async_client.post(
         "/login",
         data={
-            "username": registered_user_with_password["email"],
-            "password": registered_user_with_password["password"],
+            "username": confirmed_user_with_password["email"],
+            "password": confirmed_user_with_password["password"],
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )

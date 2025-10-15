@@ -72,7 +72,7 @@ async def test_login_user_not_exists(async_client: AsyncClient):
 
 
 @pytest.mark.anyio
-async def test_login_user(
+async def test_login_user_not_confirmed(
     async_client: AsyncClient, registered_user_with_password: dict
 ):
     response = await async_client.post(
@@ -80,6 +80,22 @@ async def test_login_user(
         data={
             "username": registered_user_with_password["email"],
             "password": registered_user_with_password["password"],
+        },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+    assert response.json() == {"detail": "User has not confirmed email"}
+
+
+@pytest.mark.anyio
+async def test_login_user(
+    async_client: AsyncClient, confirmed_user_with_password: dict
+):
+    response = await async_client.post(
+        "/login",
+        data={
+            "username": confirmed_user_with_password["email"],
+            "password": confirmed_user_with_password["password"],
         },
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )

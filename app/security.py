@@ -99,6 +99,8 @@ async def authenticate_user(email: str, password: str):
         raise unauthorized_exception("Inexistent user")
     if not verify_password(password, user.password):
         raise unauthorized_exception("Invalid credentials")
+    if not user.confirmed:
+        raise unauthorized_exception("User has not confirmed email")
     return user
 
 

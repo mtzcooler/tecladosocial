@@ -5,7 +5,7 @@ from http import HTTPStatus
 
 @pytest.mark.anyio
 async def test_create_post(
-    async_client: AsyncClient, logged_in_token: str, registered_user_with_password
+    async_client: AsyncClient, logged_in_token: str, confirmed_user_with_password
 ):
     body = "Test Post"
     response = await async_client.post(
@@ -18,7 +18,7 @@ async def test_create_post(
     assert {
         "id": 1,
         "body": body,
-        "user_id": registered_user_with_password["id"],
+        "user_id": confirmed_user_with_password["id"],
     }.items() <= response.json().items()
 
 
@@ -85,7 +85,7 @@ async def test_create_comment(
     async_client: AsyncClient,
     created_post: dict,
     logged_in_token: str,
-    registered_user_with_password,
+    confirmed_user_with_password,
 ):
     body = "Test comment"
     post_id = created_post["id"]
@@ -99,7 +99,7 @@ async def test_create_comment(
     assert {
         "id": 1,
         "post_id": post_id,
-        "user_id": registered_user_with_password["id"],
+        "user_id": confirmed_user_with_password["id"],
         "body": body,
     }.items() <= response.json().items()
 
