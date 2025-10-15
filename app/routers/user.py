@@ -10,6 +10,7 @@ from app.security import (
     get_password_hash,
     authenticate_user,
     create_access_token,
+    get_subject_for_token_type,
 )
 from app.database import database, user_table
 from app.schemas.user import UserCreate, UserRead
@@ -45,3 +46,16 @@ async def login(
     user = await authenticate_user(form_data.username, form_data.password)
     access_token = create_access_token(user.email)
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.get("/confirm/{token}")
+async def confirm_email(token: str) -> dict:
+    email = get_subject_for_token_type(token, "confirmation")
+    query = (
+        user_table.update().where(user_table.c.email == email).values(confirmed=True)
+    )
+
+    logger.debug(query)
+
+    await database.execute(query)
+    return {"detail": "User confirmed."}
