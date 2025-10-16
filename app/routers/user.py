@@ -1,7 +1,7 @@
 from http import HTTPStatus
 import logging
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, BackgroundTasks
 from fastapi.params import Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -25,7 +25,9 @@ router = APIRouter(
 
 
 @router.post("/register", status_code=HTTPStatus.CREATED)
-async def register(user: UserCreate, request: Request) -> UserRead:
+async def register(
+    user: UserCreate, background_tasks: BackgroundTasks, request: Request
+) -> UserRead:
     if await get_user(user.email):
         raise HTTPException(
             status_code=HTTPStatus.CONFLICT,
@@ -39,7 +41,8 @@ async def register(user: UserCreate, request: Request) -> UserRead:
     last_record_id = await database.execute(query)
     new_user = {"email": user.email, "id": last_record_id}
 
-    await send_user_registration_email(
+    background_tasks.add_task(
+        send_user_registration_email,
         user.email,
         request.url_for("confirm_email", token=create_confirmation_token(user.email)),
     )
