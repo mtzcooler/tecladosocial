@@ -4,6 +4,7 @@ os.environ["ENV_STATE"] = "test"
 
 from typing import AsyncGenerator, Generator
 import pytest
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from httpx import AsyncClient, ASGITransport
 
@@ -75,3 +76,11 @@ async def confirmed_user_with_password(registered_user: dict) -> dict:
     )
     await database.execute(query)
     return {**registered_user, "password": registered_user["password"]}
+
+
+@pytest.fixture(autouse=True)
+def mock_mailtrap_post():
+    with patch("requests.post") as mock_post:
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.text = '{"success": true}'
+        yield mock_post
